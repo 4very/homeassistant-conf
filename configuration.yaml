@@ -17,10 +17,10 @@ homeassistant:
   elevation: !secret homeassistant_elevation
   unit_system: imperial
   temperature_unit: F
-  time_zone: America/New_York
-  external_url: "https://ha.baps.pw"
-  internal_url: "http://192.168.0.191:8123"
-  currency: USD
+  time_zone: !secret time_zone
+  external_url: !secret external_url
+  internal_url: !secret internal_url
+  currency: !secret currency
   allowlist_external_dirs:
     - /config
 
@@ -77,14 +77,14 @@ lovelace:
 notify:
   - name: Pushover_generic
     platform: pushover
-    api_key: ayxsmukqeyiaqqf1ae87t8a2gcg9my
-    user_key: u64uv2pwurngrdiccyd1ezeruvo39y
+    api_key: !secret pushover_api_key
+    user_key: !secret pushover_user_key
   - name: Twitter_generic
     platform: twitter
-    consumer_key: j9HbvOzP1U2l0idPDM5Ryx08C
-    consumer_secret: 1lgPH6ecRUoinhFiRm7z798uwSkSQ6vhHsPBfs3nfRdIhf8Rgn
-    access_token: 3728173095-4PsnNrR4ZHjFWLW3BXcCGFQhDdGERER9REURYP7
-    access_token_secret: 6VCpy9514Ko3AqagO5DSQgPeRV02tGYiMDJyWziIDu9n6
+    consumer_key: !secret twitter_consumer_key
+    consumer_secret: !secret twitter_consumer_secret
+    access_token: !secret twitter_access_token
+    access_token_secret: !secret twitter_access_token_secret
 
 spotify:
   client_id: !secret spotify_client_id
