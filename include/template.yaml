@@ -1,0 +1,343 @@
+template:
+  ####################################################
+  #                                                  #
+  #                      SELECT                      #
+  #                                                  #
+  ####################################################
+
+  - select:
+      - name: conditional_media
+        state: >
+          {% set recently_added = 'Recently Added' %}
+          {% set paused_timeout_minutes = 15 %}
+          {% set media_players = [
+            states.media_player.living_room_tv,
+            states.media_player.spotify_sommea112 ] %}
+
+          {% macro media(state) %}
+          {% set state = media_players | selectattr('state','eq',state) | list %}
+          {% set last_changed = recently_added if state | length == 0 else state | map(attribute='last_changed') | list | max %}
+            {{ state | selectattr('last_changed','eq', last_changed) | map(attribute='name') | list | join }}
+          {% endmacro %}
+
+          {% set playing = media_players | selectattr('state','eq','playing') | list %}
+          {% set timeout_playing = False if playing | length == 0 else
+            (as_timestamp(now()) - as_timestamp(playing | map(attribute='last_changed') | list | max)) < paused_timeout_minutes * 60 %}
+
+          {% set paused = media_players | selectattr('state','eq','paused') | list %}
+          {% set timeout_paused = False if paused | length == 0 else
+            (as_timestamp(now()) - as_timestamp(paused | map(attribute='last_changed') | list | max)) < paused_timeout_minutes * 60 %}
+
+          {% if playing %}
+            {{ media('playing') if timeout_playing else media('paused') if timeout_paused else media('playing') }}
+          {% elif paused %}
+            {{ media('paused') if timeout_paused else recently_added }}
+          {% else %}
+            {{ recently_added }}
+          {% endif %}
+        options: >
+          {% set recently_added = ['Recently Added'] %}
+          {% set media_players = [
+            states.media_player.living_room_tv,
+            states.media_player.spotify_sommea112 ] %}
+          {{ recently_added + media_players | map(attribute='name') | list }}
+        select_option:
+          service: select.select_option
+          target:
+            entity_id: select.conditional_media
+          data:
+            option: >
+              {{ option }}
+
+    ####################################################
+    #                                                  #
+    #                      SENSOR                      #
+    #                                                  #
+    ####################################################
+
+  - sensor:
+      - unique_id: light_kitchen_overhead_lock
+        state: >
+          {% if states('light.kitchen_overhead_1') == 'unavailable' or  
+                states('light.kitchen_overhead_2') == 'unavailable' or  
+                states('light.kitchen_overhead_3') == 'unavailable' or  
+                states('light.kitchen_overhead_4') == 'unavailable' or  
+                states('light.kitchen_overhead_5') == 'unavailable' or  
+                states('light.kitchen_overhead_6') == 'unavailable' 
+          %}
+            on
+          {% else %}
+            off
+          {% endif %}
+      - unique_id: light_bathroom_lock
+        state: >
+          {% if states('light.bathroom_bulb_1') == 'unavailable' or  
+                states('light.bathroom_bulb_1') == 'unavailable' 
+          %}
+            on
+          {% else %}
+            off
+          {% endif %}
+        # attributes:
+
+  - sensor:
+      - unique_id: sidebar
+        state: template
+        attributes:
+          time: >
+            {% set hours = now().strftime('%I') %}
+            {% set minutes = now().strftime('%M') %}
+            <span class="time">
+              {{ hours }}<span class="time-colon">:</span>{{ minutes }}
+            </span>
+          date: |
+            <font color='#6a7377'><b>
+            {%- if strptime(states('sensor.date'), '%Y-%m-%d').day != null %}
+            {%- set days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+            {%- set months = ['January', 'February', 'March', 'April', 'May', 'June', 
+            'July', 'August', 'September', 'October', 'November', 'December'] %}
+              {{- days[now().weekday()] }}<br>
+              {{- strptime(states('sensor.date'), '%Y-%m-%d').day }} {{ months[now().month-1] }}
+            {%- endif -%}
+            </b></font>
+          greet: |
+            <b>
+            {%- set time = now().hour %}
+            {%- if time <= 1 -%} Good night {{'\U0001F611'}}
+            {%- elif time <= 3 -%} Good night {{'\U0001F62A'}}
+            {%- elif time <= 5 -%} Good night {{'\U0001F634'}}
+            {%- elif time <= 7 -%} Good morning {{'\U0001F4A9'}}
+            {%- elif time <= 9 -%} Good morning {{'\u2615\uFE0F'}}
+            {%- elif time <= 10 -%} Good morning {{'\U0001F642'}}
+            {%- elif time <= 13 -%} Good day {{'\U0001F60A'}}
+            {%- elif time <= 15 -%} Good day {{'\U0001F60E'}}
+            {%- elif time <= 17 -%} Good day {{'\U0001F44B\U0001F3FB'}}
+            {%- elif time <= 19 -%} Good evening {{'\U0001F44B\U0001F3FB'}}
+            {%- elif time <= 22 -%} Good evening {{'\U0001F60C'}}
+            {%- elif time <= 23 -%} Good evening {{'\U0001F974'}}
+            {%- else %} Good evening {{'\U0001F974'}}
+            {%- endif -%}
+            </b>
+          active: |
+            <b>
+            {%- set lights = [ 
+            {
+              'entity': states.light.avery_lights,
+              'lock': 'off'
+            },
+            {
+              'entity': states.light.living_room,
+              'lock': 'off'
+            },
+            {
+              'entity': states.light.kitchen_overhead,
+              'lock': states.light.template_kitchen_overhead_lock.state
+            },
+            {
+              'entity': states.light.bathroom,
+              'lock': states.sensor.template_bathroom_lock.state
+            }] %}
+
+            {%- set switches = [
+              states.media_player.living_room_tv
+            ] %}
+
+            {%- set media_players = [
+              states.media_player.living_room_tv
+            ] %}
+
+            {%- set lights = lights | selectattr('lock','eq','off') | map(attribute='entity') | list %}
+            {%- set lights_on = lights | selectattr('state','eq','on') | list %}
+            {%- set lights_name = lights | selectattr('state','eq','on') | map(attribute='name') | join(', ') %}
+
+            {%- set switches_on = switches | selectattr('state','eq','on') | list %}
+            {%- set media_players_playing = media_players | selectattr('state','eq','playing') | list %}
+            {%- set append = switches_on + media_players_playing %}
+            {%- set switches_name = append | map(attribute='name') | join(', ') %}
+
+            {%- if (lights_on | length == 0) and (switches_on | length > 0) -%}
+              {{ switches_name | regex_replace(',([^,]*)$',' and\\1') }} is on
+
+            {%- elif (lights_on | length == 1) and (switches_on | length == 1) -%}
+              {{ lights_name }} and {{switches_name }} is on
+
+            {%- elif (lights_on | length == 1) and (switches_on | length > 1) -%}
+              {{ lights_name }}, {{ switches_name | regex_replace(',([^,]*)$',' och\\1') }} is on
+
+            {%- elif (lights_on | length > 1) and (switches_on | length == 1) -%}
+              {{ lights_on | length }} lamps and {{ switches_name }} is on
+
+            {%- elif (lights_on | length > 1) and (switches_on | length > 1) -%}
+              {{ lights_on | length }} lamps, {{ switches_name | regex_replace(',([^,]*)$',' och\\1') }} is on
+
+            {%- elif (lights_on | length == 1) and (switches_on | length == 0) -%}
+              {{ lights_name }} is on
+
+            {%- elif (lights_on | length > 1) and (switches_on | length == 0) -%}
+              {{ lights_on | length }} lamps are on
+
+            {%- else %}
+              <font color='#6a7377'>Everything is turned off.</font>
+            {%- endif -%}
+            </b>
+          # mailbox: |
+          #   {% set mailbox = states('sensor.mailbox') %}
+          #   {% if mailbox | int(default=0) > 0 %}
+          #     {{ '\U0001F4EC' }} <font color='#6a7377'><b>Mailbox ({{ mailbox }})</b></font>
+          #   {% endif %}
+          weather: |
+            {%- set temperature = states('sensor.weather_tempature') %}
+            {%- set apparent = states('sensor.weather_tempature_apparent') | round %}
+            {%- set humid = states('sensor.weather_humidity')  %}
+
+            {%- set moonPhaseNum = states('sensor.weather_moonphase')  %}
+            {%- set moonPhaseText = state_attr('sensor.weather_moonphase', 'text')  %}
+
+            {% if is_state('sensor.is_day', '1') %}
+                {%- set code = states('sensor.weather_codeday') %}
+                {%- set codetext = state_attr('sensor.weather_codeday', 'text') %}
+            {% else %}
+                {%- set code = states('sensor.weather_codenight') %}
+                {%- set codetext = state_attr('sensor.weather_codenight', 'text') %}
+            {% endif %}
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="flex-grow:999">
+                <p style="margin:0;"><span style="font-size:100%" >{{codetext}}</span></p>
+                <p style="margin:0 0 0 0;"><span style="font-size:130%"><b>{{apparent}}</b><span style="font-size:70%">F</span> <b>{{humid}}</b><span style="font-size:70%">%</span></span></p>
+              </div>
+                <img src="/local/img/weather/png/{{code}}@2x.png" width="20%"/>
+            </div>
+            {% if is_state('sensor.is_day', '0') %}
+
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="flex-grow:999">
+                <p style="margin:0;"><span style="font-size:160%">{{moonPhaseText}}</span></p>
+              </div>
+                <img src="/local/img/moon/svg/{{moonPhaseNum}}.svg" width="17%"/>
+            </div>
+
+            {% else %}
+
+            {% endif %}
+
+          battery: |
+            {% set entities = states.sensor 
+              | selectattr('entity_id', 'search', 'battery')
+              | rejectattr('entity_id', 'search', 'iphone')
+              | map(attribute = 'entity_id') | list %}
+            {%- for sensor in entities if states(sensor) != 'unknown' and states(sensor) !=
+            'unavailable' and states(sensor) != 'None' and states(sensor) | int(default=0) <= 5 %}
+              {%- if loop.first %} {{-'\u26A0\uFE0F'}} Battery {% else %}, {% endif -%}
+              {{ state_attr(sensor, 'friendly_name') }} {{ states(sensor) }}%
+            {%- endfor %}
+          plex: |
+            {% if is_state('binary_sensor.plex_availability', 'off') -%}
+              {{-'\u26A0\uFE0F'}} Plex is down...
+            {%- endif %}
+          nas: |
+            {% if is_state('binary_sensor.nas_internet_access', 'off') -%}
+              {{-'\u26A0\uFE0F'}} Check NAS Internet access
+            {%- endif %}
+
+      - unique_id: hass_version
+        icon: mdi:home-assistant
+        state: >
+          {{ 'Latest' if states('sensor.current_version') == 
+          states('sensor.sensor.hass_version_latest') else states('sensor.hass_version_latest') }}
+        attributes:
+          friendly_name: >
+            Installed {{ states('sensor.current_version') }}
+
+      - unique_id: hass_dev_release
+        icon: mdi:dev-to
+        device_class: timestamp
+        state: >
+          {{ (as_timestamp(state_attr('calendar.home_assistant_devs', 'start_time'), default=0) + 60*60*18) | timestamp_local(default) }}
+        attributes:
+          friendly_name: >
+            {% set release = state_attr('calendar.home_assistant_devs','message') %}
+            {% if release == 'Home Assistant Core Beta Release' %}
+              Next Beta
+            {% elif release == 'Home Assistant Core Release' %}
+              Next release
+            {% else %}
+              {{ release }}
+            {% endif %}
+
+      - unique_id: hacs_version
+        state: >
+          {{ device_attr(device_id('sensor.hacs'), 'installed_version') }}
+
+      - unique_id: device_counter
+        state: >
+          {{ states | count }}
+        attributes:
+          automation: >
+            {{ states.automation | count }}
+          binary_sensor: >
+            {{ states.binary_sensor | count }}
+          device_tracker: >
+            {{ states.device_tracker | count }}
+          light: >
+            {{ states.light | count }}
+          media_player: >
+            {{ states.media_player | count }}
+          sensor: >
+            {{ states.sensor | count }}
+          switch: >
+            {{ states.switch | count }}
+          other: >
+            {{ states.calendar | count +
+            states.camera | count +
+            states.climate | count +
+            states.fan | count +
+            states.input_boolean | count +
+            states.input_number | count +
+            states.input_select | count +
+            states.lock | count +
+            states.person | count +
+            states.remote | count +
+            states.scene | count +
+            states.script | count +
+            states.select | count +
+            states.sun | count +
+            states.timer | count +
+            states.vacuum | count +
+            states.weather | count +
+            states.zone | count }}
+
+      - unique_id: nas_status
+        state: >
+          {% set entity_id = 'sensor.nas_volume_1_status' %}
+          {% if is_state(entity_id, 'normal') %}
+            Normal
+          {% elif is_state(entity_id, 'background') %}
+            Background
+          {% else %}
+            {{ states(entity_id) }}
+          {% endif %}
+        attributes:
+          friendly_name: System
+      # - unique_id: fullykiosk_storage
+      #   icon: mdi:sd
+      #   unit_of_measurement: "%"
+      #   state: >
+      #     {% set FreeSpace = states('sensor.galaxy_tab_a_internal_storage_free_space') | float(default=0) %}
+      #     {% set TotalSpace = states('sensor.galaxy_tab_a_internal_storage_total_space') | float(default=0) %}
+      #     {% if not (FreeSpace == 0.0 or TotalSpace == 0.0) %}
+      #       {{ 100 - (FreeSpace / TotalSpace * 100) | int(default=0) }}
+      #     {% endif %}
+      #   attributes:
+      #     friendly_name: Storage
+
+      # - unique_id: fullykiosk_memory
+      #   icon: mdi:memory
+      #   unit_of_measurement: "%"
+      #   state: >
+      #     {% set FreeMemory = states('sensor.galaxy_tab_a_ram_free_memory') | float(default=0) %}
+      #     {% set TotalMemory = states('sensor.galaxy_tab_a_ram_total_memory') | float(default=0) %}
+      #     {% if not (FreeMemory == 0.0 or TotalMemory == 0.0) %}
+      #       {{ 100 - (FreeMemory / TotalMemory * 100) | int(default=0) }}
+      #     {% endif %}
+      #   attributes:
+      #     friendly_name: Memory

@@ -1,0 +1,14 @@
+binary_sensor:
+  - platform: command_line
+    name: plex_availability
+    command: !secret plex_availability
+    scan_interval: 300
+    device_class: connectivity
+  - platform: ping
+    name: nas_internet_access
+    host: 8.8.8.8
+  - platform: template
+    sensors:
+      spotify_using_snapcast:
+        friendly_name: "Spotify using Snapcast"
+        value_template: '{% if state_attr("media_player.spotify_sommea112", "source") == "Snapcast" %}true{% else %}false{% endif %}'

@@ -1,0 +1,90 @@
+sensor:
+  - platform: plex_recently_added
+    token: !secret plex_token
+    host: !secret plex_host
+    port: !secret plex_port
+    max: 1
+    img_dir: /
+    image_resolution: 500
+
+  - platform: filesize
+    file_paths:
+      - /config/home-assistant.log
+
+  - platform: systemmonitor
+    resources:
+      - type: disk_use_percent
+        arg: /
+      - type: memory_use_percent
+      - type: processor_use
+      - type: last_boot
+    scan_interval: 120
+
+  - platform: command_line
+    command: !secret argus_disk_usage
+    name: argus_disk_use_percent
+    unit_of_measurement: "%"
+    scan_interval: 86400
+
+  - platform: command_line
+    command: !secret muses_disk_usage
+    name: muses_disk_use_percent
+    unit_of_measurement: "%"
+    scan_interval: 86400
+
+  - platform: command_line
+    command: !secret argus_cpu_usage
+    name: argus_cpu_use_percent
+    unit_of_measurement: "%"
+    scan_interval: 86400
+
+  - platform: command_line
+    command: !secret argus_mem_usage
+    name: argus_mem_use_percent
+    unit_of_measurement: "%"
+    scan_interval: 86400
+
+  - platform: command_line
+    command: !secret argus_ping
+    name: argus_status
+    scan_interval: 86400
+
+  - platform: command_line
+    command: !secret argus_last_boot
+    name: argus_last_boot
+    scan_interval: 86400
+
+  - platform: uptime
+
+  - platform: time_date
+    display_options:
+      - time
+      - date
+
+  - platform: rest
+    name: hass_release_notes
+    resource: https://api.github.com/repos/home-assistant/core/releases/latest
+    value_template: >
+      {{ value_json.name }}
+    json_attributes:
+      - body
+    scan_interval: 21600
+
+  - platform: rest
+    name: hass_release_notes_rc
+    resource: https://api.github.com/repos/home-assistant/core/releases?per_page=1
+    value_template: >
+      {{ value_json[0].name }}
+    json_attributes:
+      - body
+    scan_interval: 21600
+
+  - platform: sql
+    db_url: !secret recorder_db_url
+    queries:
+      - name: Database
+        query: >
+          SELECT table_schema "database", Round(Sum(data_length + index_length) / POWER(1024,2), 1) 
+          "value" FROM information_schema.tables WHERE table_schema="homeassistant" GROUP BY table_schema;
+        column: value
+        unit_of_measurement: MB

@@ -1,0 +1,16 @@
+homeassistant:
+  # sensors
+
+  sensor.argus_disk_use_percent:
+    icon: mdi:harddisk
+  sensor.muses_disk_use_percent:
+    icon: mdi:harddisk
+  sensor.argus_cpu_use_percent:
+    icon: mdi:cpu-64-bit
+  sensor.argus_mem_use_percent:
+    icon: mdi:memory
+  sensor.argus_status:
+    icon: mdi:eye-circle
+  sensor.argus_last_boot:
+    icon: mdi:clock-time-four
+    device_class: timestamp

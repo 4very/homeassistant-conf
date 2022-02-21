@@ -1,0 +1,110 @@
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+homeassistant:
+  packages: !include_dir_named include #theme
+  latitude: !secret homeassistant_latitude
+  longitude: !secret homeassistant_longitude
+  elevation: !secret homeassistant_elevation
+  unit_system: imperial
+  temperature_unit: F
+  time_zone: America/New_York
+  external_url: "https://ha.baps.pw"
+  internal_url: "http://192.168.0.191:8123"
+  currency: USD
+  allowlist_external_dirs:
+    - /config
+
+discovery:
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 192.168.0.201
+
+lovelace:
+  mode: yaml
+  dashboards:
+    overview-dev:
+      mode: yaml
+      filename: ui-lovelace-dev.yaml
+      title: Overview Dev
+      icon: mdi:dev-to
+      show_in_sidebar: true
+  resources: #hacs
+    - url: /hacsfiles/button-card/button-card.js
+      type: module
+    - url: /hacsfiles/lovelace-card-mod/card-mod.js
+      type: module
+    - url: /hacsfiles/lovelace-layout-card/layout-card.js
+      type: module
+    - url: /hacsfiles/swipe-card/swipe-card.js
+      type: module
+    - url: /hacsfiles/sidebar-card/sidebar-card.js
+      type: module
+    - url: /hacsfiles/light-popup-card/light-popup-card.js
+      type: module
+    - url: /browser_mod.js
+      type: module
+    - url: /hacsfiles/light-entity-card/light-entity-card.js
+      type: module
+    - url: /hacsfiles/lovelace-slider-entity-row/slider-entity-row.js
+      type: module
+    - url: /hacsfiles/media_player-popup-card/media_player-popup-card.js
+      type: module
+    - url: /local/state-switch.js
+      type: module
+    - url: /hacsfiles/cct-popup-card/cct-popup-card.js
+      type: module
+    - url: /hacsfiles/bar-card/bar-card.js
+      type: module
+    - url: /hacsfiles/lovelace-mushroom/mushroom.js
+      type: module
+    - url: /hacsfiles/apexcharts-card/apexcharts-card.js
+      type: module
+    - url: /hacsfiles/kiosk-mode/kiosk-mode.js
+      type: module
+
+notify:
+  - name: Pushover_generic
+    platform: pushover
+    api_key: ayxsmukqeyiaqqf1ae87t8a2gcg9my
+    user_key: u64uv2pwurngrdiccyd1ezeruvo39y
+  - name: Twitter_generic
+    platform: twitter
+    consumer_key: j9HbvOzP1U2l0idPDM5Ryx08C
+    consumer_secret: 1lgPH6ecRUoinhFiRm7z798uwSkSQ6vhHsPBfs3nfRdIhf8Rgn
+    access_token: 3728173095-4PsnNrR4ZHjFWLW3BXcCGFQhDdGERER9REURYP7
+    access_token_secret: 6VCpy9514Ko3AqagO5DSQgPeRV02tGYiMDJyWziIDu9n6
+
+spotify:
+  client_id: !secret spotify_client_id
+  client_secret: !secret spotify_client_secret
+
+google:
+  client_id: !secret google_client_id
+  client_secret: !secret google_client_secret
+
+media_player:
+  - platform: snapcast
+    host: 192.168.0.201
+
+browser_mod:
+  prefix: browser_
+
+recorder:
+  db_url: !secret recorder_db_url
+  purge_keep_days: 5
+  commit_interval: 30
+  exclude:
+    entity_globs:
+      - sensor.browser_*

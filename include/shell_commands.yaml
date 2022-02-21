@@ -1,0 +1,2 @@
+shell_command:
+  update_core: ha core update

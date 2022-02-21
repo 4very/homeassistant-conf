@@ -1,0 +1,362 @@
+button_card_templates: !include button_card_templates.yaml
+
+title: Home
+
+# sidebar:
+#   style: |
+#     :host{
+#       --sidebar-background: rgba(20,20,20,1):
+#       --sidebar-text-color: var(--primary-text-color):
+#       --border-radius: 5px;
+#       --face-color: #FFF;
+#       --face-border-color: #FFF;
+#       --clock-hands-color:#000;
+#       --clock-seconds-hand-color: #FF4B3E;
+#       --clock-middle-background: #FFF;
+#       --clock-middle-border: #000;
+#       box-shadow: insert -38px -3px 11px -28px rgba(49,49,49, .2);
+#     }
+#   digitalClock: true
+#   hideTopMenu: false
+#   date: true
+#   sidebarMenu:
+#     - action: navigate
+#       navigation_path: /lovelace/0
+#       name: Home
+#     # - action: navigate
+#     #   navigation_path: /lovelace/1
+#     #   name: Living Spaces
+#     #   active: true
+#     # - action: navigate
+#     #   navigation_path: /dashboard-2/replace
+#     #   name: Resting Spaces
+#     # - action: navigate
+#     #   navigation_path: /lovelace/music
+#     #   name: Ambience
+#     # - action: navigat
+#     #   navigation_path: /lovelace/4
+#     #   name: Media
+#     # - action: navigate
+#     #   navigation_path: /lovelace/4
+#     #   name: Control Center
+#   bottomCard:
+#     type: horizontal-stack
+#     cardOptions:
+#       cards:
+#         - type: custom:button-card
+#           entity: sensor.template_sidebar
+#           template: sidebar
+
+#         - type: conditional
+#           conditions:
+#             - entity: input_boolean.laundry_display
+#               state: "on"
+#           card:
+#             type: custom:button-card
+#             entity: timer.laundry
+#             template: laundry
+
+#         - type: grid
+#           cards:
+#             - type: button
+#               icon: custom:roborock-vacuum
+#               tap_action: !include popup/sidebar_vacuum.yaml
+#               hold_action:
+#                 action: none
+
+#             - type: button
+#               icon: mdi:information-outline
+#               tap_action: !include popup/sidebar_information.yaml
+#               hold_action:
+#                 action: none
+
+#             - type: button
+#               icon: mdi:arrow-up-bold-circle-outline
+#               tap_action: !include popup/sidebar_update.yaml
+#               hold_action:
+#                 action: none
+
+#     cardStyle: |
+#       :host {
+#         width: 100%;
+#       }
+
+views:
+  - type: custom:grid-layout
+    path: 0
+    layout:
+      #default
+      grid-gap: var(--custom-layout-card-padding)
+      grid-template-columns: repeat(4, 1fr) 0
+      grid-template-rows: 0 repeat(2, fit-content(100%)) 0fr
+      grid-template-areas: |
+        "sidebar  .           .       .       ."
+        "sidebar  sec1  sec2  sec3  ."
+        "sidebar  media       sec4  sec5   ."
+        "sidebar  footer      footer  footer  ."
+      mediaquery:
+        #phone
+        "(max-width: 800px)":
+          grid-gap: calc(var(--custom-layout-card-padding) * 1.7)
+          grid-template-columns: 0 repeat(2, 1fr) 0
+          grid-template-rows: 0 repeat(5, fit-content(100%)) 0fr
+          grid-template-areas: |
+            ".  .           .        ."
+            ".  sidebar     sidebar  ."
+            ".  sec1  sec3   ."
+            ".  sec2      sec4   ."
+            ".  media       sec5    ."
+            ".  footer      footer   ."
+            ".  .           .        ."
+        #portrait
+        "(max-width: 1200px)":
+          grid-gap: var(--custom-layout-card-padding)
+          grid-template-columns: repeat(3, 1fr) 0
+          grid-template-rows: 0 repeat(3, fit-content(100%)) 0fr
+          grid-template-areas: |
+            "sidebar  .           .       ."
+            "sidebar  sec1  sec3  ."
+            "sidebar  sec2      sec4  ."
+            "sidebar  media       sec5   ."
+            "sidebar  footer      footer  ."
+            "sidebar  .           .       ."
+    badges: []
+    cards:
+      - type: custom:button-card
+        styles: #extra_styles fix
+          card:
+            - display: none
+      - type: vertical-stack
+        view_layout:
+          grid-area: sidebar
+        cards:
+          - type: custom:button-card
+            entity: sensor.template_sidebar
+            template: sidebar
+
+          - type: conditional
+            conditions:
+              - entity: input_boolean.laundry_display
+                state: "on"
+            card:
+              type: custom:button-card
+              entity: timer.laundry
+              template: laundry
+
+          - type: grid
+            cards:
+              - type: button
+                icon: custom:roborock-vacuum
+                tap_action: !include popup/sidebar_vacuum.yaml
+                hold_action:
+                  action: none
+
+              - type: button
+                icon: mdi:information-outline
+                tap_action: !include popup/sidebar_information.yaml
+                hold_action:
+                  action: none
+
+              - type: button
+                icon: mdi:arrow-up-bold-circle-outline
+                tap_action: !include popup/sidebar_update.yaml
+                hold_action:
+                  action: none
+
+      #################################################
+      #                                               #
+      #                  sec1                   #
+      #                                               #
+      #################################################
+
+      - type: grid
+        title: Lights
+        view_layout:
+          grid-area: sec1
+        columns: 2
+        cards:
+          - type: custom:button-card
+            entity: light.avery_lights
+            name: Avery
+            template:
+              - light
+              - icon_hue
+              - light_brightness_circ
+
+          - type: custom:button-card
+            entity: light.living_room
+            name: Living Room
+            template:
+              - light_cct
+              - icon_shade
+              - light_brightness_circ
+
+          - type: custom:button-card
+            entity: light.kitchen_overhead
+            name: Kitchen
+            variables:
+              lock_entity: sensor.template_light_kitchen_overhead_lock
+            template:
+              - light_cct
+              - icon_shade
+              - light_lock
+
+          - type: custom:button-card
+            entity: light.bathroom
+            name: Bathroom
+            variables:
+              lock_entity: sensor.template_light_bathroom_lock
+            template:
+              - light_cct
+              - icon_shade
+              - light_lock
+
+      - type: grid
+        title: Media
+        view_layout:
+          grid-area: media
+        columns: 1
+        cards:
+          - type: custom:swipe-card
+            start_card: 1
+            parameters:
+              roundLengths: true
+              effect: coverflow
+              speed: 650
+              spaceBetween: 20
+              threshold: 7
+              coverflowEffect:
+                rotate: 80
+                depth: 300
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: conditional
+                    conditions:
+                      - entity: select.conditional_media
+                        state_not: sec1
+                      - entity: select.conditional_media
+                        state_not: sec3
+                      - entity: select.conditional_media
+                        state_not: Spotify
+                      - entity: select.conditional_media
+                        state_not: Kök
+                    card:
+                      type: custom:button-card
+                      entity: sensor.plex_recently_added
+                      tap_action:
+                        action: none
+                      template:
+                        - recently_added
+                        - icon_plex
+
+                  - type: conditional
+                    conditions:
+                      - entity: select.conditional_media
+                        state: sec1
+                    card:
+                      type: custom:button-card
+                      entity: media_player.sec1
+                      template:
+                        - conditional_media
+                        - icon_apple_tv
+
+                  - type: conditional
+                    conditions:
+                      - entity: select.conditional_media
+                        state: sec3
+                    card:
+                      type: custom:button-card
+                      entity: media_player.sec3
+                      template:
+                        - conditional_media
+                        - icon_apple_tv
+
+                  - type: conditional
+                    conditions:
+                      - entity: select.conditional_media
+                        state: Spotify
+                    card:
+                      type: custom:button-card
+                      entity: media_player.spotify_sommea112
+                      template:
+                        - conditional_media
+                        - icon_spotify
+
+                  - type: conditional
+                    conditions:
+                      - entity: select.conditional_media
+                        state: Kök
+                    card:
+                      type: custom:button-card
+                      entity: media_player.kok
+                      template:
+                        - conditional_media
+                        - icon_nest_mini
+
+              - type: grid
+                columns: 2
+                cards:
+                  - type: custom:button-card
+                    entity: media_player.living_room_tv
+                    name: Living Room
+                    template:
+                      - media
+                      - icon_tv
+
+                  - type: custom:button-card
+                    entity: media_player.sec3
+                    name: sec3
+                    template:
+                      - media
+                      - icon_apple_tv
+
+                  - type: custom:button-card
+                    entity: media_player.spotify_sommea112
+                    name: Spotify
+                    template:
+                      - media
+                      - icon_spotify
+
+                  - type: custom:button-card
+                    entity: media_player.kok
+                    name: Nest Mini
+                    template:
+                      - media
+                      - icon_nest_mini
+
+      - type: conditional
+        view_layout:
+          grid-area: sec2
+        conditions:
+          - entity: binary_sensor.spotify_using_snapcast
+            state: "on"
+        card:
+          type: grid
+          title: Snapcast
+          # view_layout:
+          #   grid-area: sec2
+          columns: 2
+          cards:
+            - type: custom:button-card
+              entity: media_player.spotify_sommea112
+              name: Spotify
+              template:
+                - media
+                - icon_spotify
+                - volume_popup
+            - type: custom:button-card
+              entity: media_player.snapcast_averycomp
+              name: Avery
+              template:
+                - speaker
+            - type: custom:button-card
+              entity: media_player.snapcast_brookecomp
+              name: Brooke
+              template:
+                - speaker
+            - type: custom:button-card
+              entity: media_player.snapcast_tv
+              name: TVa
+              template:
+                - speaker

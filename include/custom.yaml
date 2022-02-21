@@ -1,0 +1,5 @@
+# device_tracker:
+#   - platform: tplink_router
+#     host: !secret tplink_router_ip
+#     username: !secret tplink_router_username
+#     password: !secret tplink_router_password
